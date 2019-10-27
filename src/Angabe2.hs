@@ -57,11 +57,6 @@ countAdjacent [] = []
 countAdjacent l@(x:_) = let (ys, zs) = span (==x) l
                           in (x, fromIntegral (length ys)) : countAdjacent zs
 
-countAdjacent = foldl' f (1,1)
-  where
-    f (x:xs) 
-
-
 primeFactors :: Nat1 -> [Nat1]
 primeFactors n
   | isPrime n = [n]

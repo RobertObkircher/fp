@@ -38,6 +38,28 @@ Constants
 > m = Plus Eins :: ZZ
 > n = Minus Eins :: ZZ
 
+Comparison
+
+> compareZZ :: ZZ -> ZZ -> Ordering
+
+> compareZZ Null Null = EQ
+
+> compareZZ Null (Plus _) = LT
+> compareZZ Null (Minus _) = GT
+
+> compareZZ (Plus _) Null = GT
+> compareZZ (Minus _) Null = LT
+
+> compareZZ (Minus _) (Plus _) = LT
+> compareZZ (Plus _) (Minus _) = GT
+
+> compareZZ a@(Minus _) b@(Minus _) = compareZZ (inc a) (inc b)
+> compareZZ a@(Plus _) b@(Plus _) = compareZZ (dec a) (dec b)
+
+
+> compareZZWith :: (Ordering -> Bool) -> ZZ -> ZZ -> Bool
+> compareZZWith f a b = f (compareZZ a b)
+
 
 A.1 Konvertierungsfunktionen
 
@@ -67,6 +89,7 @@ A.2 Operationen
 > mal :: ZZ -> ZZ -> ZZ
 > mal Null _ = Null
 > mal _ Null = Null
+> mal (Plus Eins) a = a
 > mal a@(Plus _) b = mal (dec a) b `plus` b
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
@@ -79,32 +102,21 @@ A.2 Operationen
 > durch a@(Plus _) b@(Minus _) = neg $ durch a (neg b)
 > durch a@(Minus _) b = durch (neg a) b
 
-
 > gleich :: ZZ -> ZZ -> Bool
-> gleich n = not . ungleich n
+> gleich = compareZZWith (==EQ)
 
 > ungleich :: ZZ -> ZZ -> Bool
-> ungleich a b = kleiner a b || kleiner b a
+> ungleich = compareZZWith (/=EQ)
 
 > groesser :: ZZ -> ZZ -> Bool
-> groesser a b = ungleich a b && not (kleiner a b)
+> groesser = compareZZWith (==GT)
 
 > kleiner :: ZZ -> ZZ -> Bool
-> kleiner Null Null = False
-> kleiner s = 9
-> kleiner Null (Plus _) = True
-> kleiner Null (Minus _) = False
-> kleiner a@(Minus _) b@(Plus _) = True
-> kleiner a@(Minus _) Null = True
-> kleiner a@(Plus _) b@(Minus _) = False
-> kleiner a@(Plus _) Null = False
-> kleiner a@(Minus _) b@(Minus _) = kleiner (inc a) (inc b)
-> kleiner a@(Plus _) b@(Plus _) = kleiner (dec a) (dec b)
-
+> kleiner = compareZZWith (==LT)
 
 > ggleich :: ZZ -> ZZ -> Bool
-> ggleich n = not . kleiner n
+> ggleich = compareZZWith (/=LT)
 
 > kgleich :: ZZ -> ZZ -> Bool
-> kgleich n = not . groesser n
+> kgleich = compareZZWith (/=GT)
 
