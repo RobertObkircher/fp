@@ -32,6 +32,13 @@ Utility functions for arithmetic operations
 >
 > dec :: ZZ -> ZZ
 > dec = neg . inc . neg
+>
+> sameSign :: ZZ -> ZZ -> Bool
+> sameSign Null Null = True
+> sameSign (Plus _) (Plus _) = True
+> sameSign (Minus _) (Minus _) = True
+> sameSign _ _ = False
+
 
 Constants
 
@@ -90,7 +97,7 @@ A.2 Operationen
 > mal Null _ = Null
 > mal _ Null = Null
 > mal (Plus Eins) a = a
-> mal a@(Plus _) b = mal (dec a) b `plus` b
+> mal a@(Plus _) b = b `plus` mal (dec a) b
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
 > durch :: ZZ -> ZZ -> ZZ
@@ -100,17 +107,15 @@ A.2 Operationen
 >     durch' _ Null = Null
 >     durch' Null _ = Null
 >     durch' a@(Plus _) b@(Plus _)
->       | a `kleiner` b = if sameSign x y then Null else Minus Eins
+>       | a `kleiner` b = roundDown x y a
 >       | otherwise = Plus Eins `plus` durch' (a `minus` b) b
 >     durch' a@(Plus _) b@(Minus _) = neg $ durch' a (neg b)
 >     durch' a@(Minus _) b = durch' (neg a) b
-
-> sameSign :: ZZ -> ZZ -> Bool
-> sameSign Null Null = Null
-> sameSign (Plus _) (Plus _) = True
-> sameSign (Minus _) (Minus _) = True
-> sameSign _ _ = False
-
+>     
+>     roundDown :: ZZ -> ZZ -> ZZ -> ZZ
+>     roundDown _ _ Null = Null
+>     roundDown (Minus _) (Plus _) _ = Plus Eins
+>     roundDown _ _ _ = Null
 
 
 > gleich :: ZZ -> ZZ -> Bool

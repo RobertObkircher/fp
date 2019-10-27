@@ -80,13 +80,25 @@ test_mal a b = mal a' b' == result
     b' = von_Zett_nach_ZZ b
     result = von_Zett_nach_ZZ (a * b)
 
+
+-- https://stackoverflow.com/questions/24209927/why-does-divmod-round-division-down-instead-of-ensuring-a-positive-remainder
+
+divEuclidean' :: Integer -> Integer -> Integer
+divEuclidean' a b = toInteger (divEuclidean (fromInteger a) (fromInteger b))
+
+divEuclidean :: Int -> Int -> Int
+x `divEuclidean` y = q + yNeg
+  where
+    (q,r) = (x + xNeg) `quotRem` y
+    xNeg = fromEnum (x < 0)
+    yNeg = xNeg*(2 * fromEnum (y < 0) - 1)
+
 test_durch :: Zett -> Zett -> Bool
 test_durch a b = durch a' b' == result
   where
     a' = von_Zett_nach_ZZ a
     b' = von_Zett_nach_ZZ b
-    result = von_Zett_nach_ZZ $ if b /= 0 then a `div` b else 0
-
+    result = von_Zett_nach_ZZ $ if b /= 0 then a `divEuclidean'` b else 0
 
 test_gleich :: Zett -> Zett -> Bool
 test_gleich a b = gleich a' b' == (a == b)
