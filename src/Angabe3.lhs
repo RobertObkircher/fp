@@ -33,16 +33,6 @@ Utility functions for arithmetic operations
 > dec :: ZZ -> ZZ
 > dec = neg . inc . neg
 
-> quotZZ :: ZZ -> ZZ -> ZZ
-> quotZZ _ Null = Null
-> quotZZ Null _ = Null
-> quotZZ a@(Plus _) b@(Plus _)
->   | a `kleiner` b = Null
->   | otherwise = Plus Eins `plus` quotZZ (a `minus` b) b
-> quotZZ a@(Plus _) b@(Minus _) = neg $ quotZZ a (neg b)
-> quotZZ a@(Minus _) b = quotZZ (neg a) b
-
-
 Constants
 
 > m = Plus Eins :: ZZ
@@ -104,9 +94,24 @@ A.2 Operationen
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
 > durch :: ZZ -> ZZ -> ZZ
-> durch a@(Plus _) b@(Minus _) = dec $ quotZZ a b
-> durch a@(Minus _) b@(Plus _) = dec $ quotZZ a b
-> durch a b = quotZZ a b
+> durch x y = durch' x y
+>   where
+>     durch' :: ZZ -> ZZ -> ZZ
+>     durch' _ Null = Null
+>     durch' Null _ = Null
+>     durch' a@(Plus _) b@(Plus _)
+>       | a `kleiner` b = if sameSign x y then Null else Minus Eins
+>       | otherwise = Plus Eins `plus` durch' (a `minus` b) b
+>     durch' a@(Plus _) b@(Minus _) = neg $ durch' a (neg b)
+>     durch' a@(Minus _) b = durch' (neg a) b
+
+> sameSign :: ZZ -> ZZ -> Bool
+> sameSign Null Null = Null
+> sameSign (Plus _) (Plus _) = True
+> sameSign (Minus _) (Minus _) = True
+> sameSign _ _ = False
+
+
 
 > gleich :: ZZ -> ZZ -> Bool
 > gleich = compareZZWith (==EQ)
