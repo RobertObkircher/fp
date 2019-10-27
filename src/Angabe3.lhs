@@ -39,6 +39,15 @@ Utility functions for arithmetic operations
 > sameSign (Minus _) (Minus _) = True
 > sameSign _ _ = False
 
+Division by 0 is not defined!
+
+> quotZZ :: ZZ -> ZZ -> ZZ
+> quotZZ Null _ = Null
+> quotZZ a@(Plus _) b@(Plus _)
+>   | a `kleiner` b = Null
+>   | otherwise = Plus Eins `plus` quotZZ (a `minus` b) b
+> quotZZ a@(Plus _) b@(Minus _) = neg $ quotZZ a (neg b)
+> quotZZ a@(Minus _) b = quotZZ (neg a) (neg b)
 
 Constants
 
@@ -100,23 +109,12 @@ A.2 Operationen
 > mal a@(Plus _) b = b `plus` mal (dec a) b
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
+>     -- https://stackoverflow.com/q/24209927
 > durch :: ZZ -> ZZ -> ZZ
-> durch x y = durch' x y
->   where
->     durch' :: ZZ -> ZZ -> ZZ
->     durch' _ Null = Null
->     durch' Null _ = Null
->     durch' a@(Plus _) b@(Plus _)
->       | a `kleiner` b = roundDown x y a
->       | otherwise = Plus Eins `plus` durch' (a `minus` b) b
->     durch' a@(Plus _) b@(Minus _) = neg $ durch' a (neg b)
->     durch' a@(Minus _) b = durch' (neg a) b
->     
->     roundDown :: ZZ -> ZZ -> ZZ -> ZZ
->     roundDown _ _ Null = Null
->     roundDown (Minus _) (Plus _) _ = Plus Eins
->     roundDown _ _ _ = Null
-
+> durch _ Null = Null -- so special
+> durch x@(Minus _) y@(Minus _) = inc $ quotZZ (inc x) y
+> durch x@(Minus _) y = dec $ quotZZ (inc x) y
+> durch x y = quotZZ x y
 
 > gleich :: ZZ -> ZZ -> Bool
 > gleich = compareZZWith (==EQ)

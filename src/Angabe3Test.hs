@@ -44,7 +44,7 @@ tc_a2 =
     ]
 
 range :: [Zett]
-range = [-42..42]
+range = [-20..20]
 
 
 test_conversion :: Bool
@@ -80,12 +80,7 @@ test_mal a b = mal a' b' == result
     b' = von_Zett_nach_ZZ b
     result = von_Zett_nach_ZZ (a * b)
 
-
--- https://stackoverflow.com/questions/24209927/why-does-divmod-round-division-down-instead-of-ensuring-a-positive-remainder
-
-divEuclidean' :: Integer -> Integer -> Integer
-divEuclidean' a b = toInteger (divEuclidean (fromInteger a) (fromInteger b))
-
+-- https://stackoverflow.com/q/24209927
 divEuclidean :: Int -> Int -> Int
 x `divEuclidean` y = q + yNeg
   where
@@ -93,8 +88,13 @@ x `divEuclidean` y = q + yNeg
     xNeg = fromEnum (x < 0)
     yNeg = xNeg*(2 * fromEnum (y < 0) - 1)
 
+divEuclidean' :: Integer -> Integer -> Integer
+divEuclidean' a b = toInteger (divEuclidean (fromInteger a) (fromInteger b))
+
 test_durch :: Zett -> Zett -> Bool
-test_durch a b = durch a' b' == result
+test_durch a b 
+  | durch a' b' == result = True
+  | otherwise = error $ show a ++ " " ++ show b ++ " -> " ++ show (durch a' b')
   where
     a' = von_Zett_nach_ZZ a
     b' = von_Zett_nach_ZZ b
