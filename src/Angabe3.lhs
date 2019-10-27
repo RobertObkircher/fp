@@ -33,6 +33,16 @@ Utility functions for arithmetic operations
 > dec :: ZZ -> ZZ
 > dec = neg . inc . neg
 
+> quotZZ :: ZZ -> ZZ -> ZZ
+> quotZZ _ Null = Null
+> quotZZ Null _ = Null
+> quotZZ a@(Plus _) b@(Plus _)
+>   | a `kleiner` b = Null
+>   | otherwise = Plus Eins `plus` quotZZ (a `minus` b) b
+> quotZZ a@(Plus _) b@(Minus _) = neg $ quotZZ a (neg b)
+> quotZZ a@(Minus _) b = quotZZ (neg a) b
+
+
 Constants
 
 > m = Plus Eins :: ZZ
@@ -94,13 +104,9 @@ A.2 Operationen
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
 > durch :: ZZ -> ZZ -> ZZ
-> durch _ Null = Null
-> durch Null _ = Null
-> durch a@(Plus _) b@(Plus _)
->   | a `kleiner` b = Null
->   | otherwise = Plus Eins `plus` durch (a `minus` b) b
-> durch a@(Plus _) b@(Minus _) = neg $ durch a (neg b)
-> durch a@(Minus _) b = durch (neg a) b
+> durch a@(Plus _) b@(Minus _) = dec $ quot a b
+> durch a@(Minus _) b@(Plus _) = dec $ quot a b
+> durch a b = quot a b
 
 > gleich :: ZZ -> ZZ -> Bool
 > gleich = compareZZWith (==EQ)
