@@ -104,9 +104,9 @@ A.2 Operationen
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
 > durch :: ZZ -> ZZ -> ZZ
-> durch a@(Plus _) b@(Minus _) = dec $ quot a b
-> durch a@(Minus _) b@(Plus _) = dec $ quot a b
-> durch a b = quot a b
+> durch a@(Plus _) b@(Minus _) = dec $ quotZZ a b
+> durch a@(Minus _) b@(Plus _) = dec $ quotZZ a b
+> durch a b = quotZZ a b
 
 > gleich :: ZZ -> ZZ -> Bool
 > gleich = compareZZWith (==EQ)
