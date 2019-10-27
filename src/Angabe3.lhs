@@ -57,21 +57,15 @@ Constants
 Comparison
 
 > compareZZ :: ZZ -> ZZ -> Ordering
-
 > compareZZ Null Null = EQ
-
 > compareZZ Null (Plus _) = LT
 > compareZZ Null (Minus _) = GT
-
 > compareZZ (Plus _) Null = GT
 > compareZZ (Minus _) Null = LT
-
 > compareZZ (Minus _) (Plus _) = LT
 > compareZZ (Plus _) (Minus _) = GT
-
 > compareZZ a@(Minus _) b@(Minus _) = compareZZ (inc a) (inc b)
 > compareZZ a@(Plus _) b@(Plus _) = compareZZ (dec a) (dec b)
-
 
 > compareZZWith :: (Ordering -> Bool) -> ZZ -> ZZ -> Bool
 > compareZZWith f a b = f (compareZZ a b)
