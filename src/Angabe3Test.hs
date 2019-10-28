@@ -27,6 +27,9 @@ test_all = do
     testRange "ggleich" test_ggleich
     testRange "kgleich" test_kgleich
 
+m = Plus Eins :: ZZ
+n = Minus Eins :: ZZ
+
 tc_a1 =
     [ von_Zett_nach_ZZ 0 ->> Null
     , von_Zett_nach_ZZ 2 ->> Plus (Nf Eins)
@@ -37,9 +40,9 @@ tc_a1 =
 tc_a2 =
     [ plus m n ->> Null
     , minus m n ->> Plus (Nf Eins)
-    , (Plus (Nf (Nf Eins))) `mal` (Minus (Nf Eins)) ->> Minus (Nf (Nf (Nf (Nf (Nf Eins)))))
-    , (Plus (Nf (Nf (Nf (Nf (Nf (Nf Eins))))))) `durch` (Plus (Nf (Nf Eins))) ->> Plus (Nf Eins)
-    , (Plus (Nf (Nf (Nf (Nf (Nf (Nf Eins))))))) `durch` (Minus (Nf (Nf Eins))) ->> Minus (Nf Eins)
+    , Plus (Nf (Nf Eins)) `mal` Minus (Nf Eins) ->> Minus (Nf (Nf (Nf (Nf (Nf Eins)))))
+    , Plus (Nf (Nf (Nf (Nf (Nf (Nf Eins)))))) `durch` Plus (Nf (Nf Eins)) ->> Plus (Nf Eins)
+    , Plus (Nf (Nf (Nf (Nf (Nf (Nf Eins)))))) `durch` Minus (Nf (Nf Eins)) ->> Minus (Nf Eins)
     , durch (Plus Eins) Null ->> Null
     ]
 

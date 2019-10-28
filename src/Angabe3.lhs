@@ -32,13 +32,8 @@ Utility functions for arithmetic operations
 >
 > dec :: ZZ -> ZZ
 > dec = neg . inc . neg
->
-> sameSign :: ZZ -> ZZ -> Bool
-> sameSign Null Null = True
-> sameSign (Plus _) (Plus _) = True
-> sameSign (Minus _) (Minus _) = True
-> sameSign _ _ = False
 
+A function that acts like 'quot'.
 Division by 0 is not defined!
 
 > quotZZ :: ZZ -> ZZ -> ZZ
@@ -49,12 +44,7 @@ Division by 0 is not defined!
 > quotZZ a@(Plus _) b@(Minus _) = neg $ quotZZ a (neg b)
 > quotZZ a@(Minus _) b = quotZZ (neg a) (neg b)
 
-Constants
-
-> m = Plus Eins :: ZZ
-> n = Minus Eins :: ZZ
-
-Comparison
+Comparison (basically instance Ord)
 
 > compareZZ :: ZZ -> ZZ -> Ordering
 > compareZZ Null Null = EQ
@@ -103,7 +93,9 @@ A.2 Operationen
 > mal a@(Plus _) b = b `plus` mal (dec a) b
 > mal a@(Minus _) b = mal (neg a) (neg b)
 
->     -- https://stackoverflow.com/q/24209927
+This is euclidean division.
+https://stackoverflow.com/q/24209927
+
 > durch :: ZZ -> ZZ -> ZZ
 > durch _ Null = Null -- so special
 > durch x@(Minus _) y@(Minus _) = inc $ quotZZ (inc x) y
