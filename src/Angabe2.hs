@@ -31,52 +31,27 @@ isDp x = isPrime x && isPrime (reverseNat x)
 reverseNat :: Nat0 -> Nat0
 reverseNat = read . reverse . show
 
-
-{- Example
-
-primeFactors = 2 2 2 3 3
-
-sum = 
-    1 + 2 + 4 + 8 +
-    1 + 3 + 9
-
--}
+-- complexity O(sqrt n)
 sumOfDivisors :: Nat1 -> Nat1
 sumOfDivisors 1 = 1
-sumOfDivisors n = product $ (uncurry sumOfPowers) <$> (countAdjacent $ primeFactors n)
+sumOfDivisors n = sum $ map divisorValue $ takeWhile (\x -> x*x <= n) [1..]
   where
-    factors = primeFactors n
+    divisorValue :: Nat1 -> Nat0
+    divisorValue x
+      | r /= 0 = 0
+      | q*q > n && q /= n = x + q
+      | otherwise = x
+      where (q,r) = quotRem n x
 
--- 1 + p + p^2 + ... + p^k
-sumOfPowers :: Nat1 -> Nat0 -> Nat1
-sumOfPowers 1 _ = 1
-sumOfPowers p k = (p^(k + 1) - 1) `div` (p - 1)
-
-countAdjacent :: Eq a => [a] -> [(a, Nat1)]
-countAdjacent [] = []
-countAdjacent l@(x:_) = let (ys, zs) = span (==x) l
-                          in (x, fromIntegral (length ys)) : countAdjacent zs
-
-primeFactors :: Nat1 -> [Nat1]
-primeFactors n
-  | isPrime n = [n]
-  | otherwise = factorize n $ takeWhile (\x -> 2*x <= n) primes
-    
-factorize :: Nat1 -> [Nat1] -> [Nat1]
-factorize _ [] = []
-factorize n l@(x:xs)
-  | n `rem` x /= 0 = factorize n xs
-  | otherwise = x : factorize (n `div` x) l
-
+-- creates a lazy list as the return value
 folge :: Nat1 -> [Nat1]
-folge n = reverse $ go [n]
+folge n = n : go [n]
   where
     go :: [Nat1] -> [Nat1]
-    go l@(1:_) = l
-    go l@(x:_) = let s = sumOfDivisors x - x
-                  in if s `elem` l
-                       then l
-                       else go (s:l)
+    go done@(last:_) = let s = sumOfDivisors last
+              in if s `elem` done
+                   then []
+                   else s : go (s:done)
 
 -- the medianoid if the list contains unique integers
 -- otherwise the sum of the list is returned
