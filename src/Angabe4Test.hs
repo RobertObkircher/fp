@@ -1,5 +1,3 @@
-{-# LANGUAGE StandaloneDeriving #-}
-
 module Angabe4Test
     ( module Test
     , module Angabe4
@@ -12,6 +10,8 @@ import Angabe4
 test_all = do
     test tc_a1
     test tc_a2
+    test tc_a4'2
+    test tc_binaer
     print test_conversion
     testRange "plus" test_plus
     testRange "minus" test_minus
@@ -23,9 +23,44 @@ test_all = do
     testRange "kleiner" test_kleiner
     testRange "ggleich" test_ggleich
     testRange "kgleich" test_kgleich
+    testRange "a_zu_bin" test_a_zu_binaer
+    testRange "bin_zu_a" test_binaer_zu_a
 
 m = Plus Eins :: ZZ
 n = Minus Eins :: ZZ
+
+tc_a4'2 =
+    [ show Null ->> "0"
+    , show (Plus (Nf (Nf (Nf Eins)))) ->> "4"
+    , show (Plus (Nf (Nf (Nf (Nf (Nf (Nf (Nf (Nf (Nf Eins)))))))))) ->> "A"
+    , show (Minus (Nf (Nf (Nf (Nf (Nf (Nf (Nf (Nf (Nf Eins)))))))))) ->> "-A"
+    ]
+
+tc_binaer :: [TestCase]
+tc_binaer =
+    [ a_zu_binaer Eins ->> "1"
+    , a_zu_binaer (Nf Eins) ->> "10"
+    , a_zu_binaer (to_IN_1 15) ->> "1111"
+    , a_zu_binaer (to_IN_1 16) ->> "10000"
+    , a_zu_binaer (to_IN_1 17) ->> "10001"
+    , from_IN_1 (binaer_zu_a "1") ->> 1
+    , from_IN_1 (binaer_zu_a "10") ->> 2
+    , from_IN_1 (binaer_zu_a "1111") ->> 15
+    , from_IN_1 (binaer_zu_a "10000") ->> 16
+    , from_IN_1 (binaer_zu_a "10001") ->> 17
+    , from_IN_1 (binaer_zu_a "0") ->> 1
+    , from_IN_1 (binaer_zu_a "-1") ->> 1
+    , from_IN_1 (binaer_zu_a "-10") ->> 1
+    , from_IN_1 (binaer_zu_a "-1111") ->> 1
+    , from_IN_1 (binaer_zu_a "-10000") ->> 1
+    , from_IN_1 (binaer_zu_a "-10001") ->> 1
+    , a_zu_binaer Null ->> "0"
+    , a_zu_binaer (0 :: Zett) ->> "0"
+    , a_zu_binaer (Plus Eins) ->> "1"
+    , a_zu_binaer (1 :: Zett) ->> "1"
+    , a_zu_binaer (Minus Eins) ->> "-1"
+    , a_zu_binaer ((-1) :: Zett) ->> "-1"
+    ]
 
 tc_a1 =
     [ von_Zett_nach_ZZ 0 ->> Null
@@ -58,6 +93,20 @@ testRange msg f = putStrLn $ msg ++ if checkRange f then " OK" else " FAIL"
 
 checkRange :: (Zett -> Zett -> Bool) -> Bool
 checkRange f = and [f a b | a<-range, b<-range]
+
+test_a_zu_binaer :: Zett -> Zett -> Bool
+test_a_zu_binaer n _ = a == b
+  where
+    a = a_zu_binaer (n :: Zett)
+    b = a_zu_binaer (von_Zett_nach_ZZ n :: ZZ)
+
+test_binaer_zu_a :: Zett -> Zett -> Bool
+test_binaer_zu_a n _ = a == b
+  where
+    a = (binaer_zu_a bin :: ZZ)
+    b = fromInteger (binaer_zu_a bin :: Zett)
+    bin = a_zu_binaer n
+
 
 test_plus :: Zett -> Zett -> Bool
 test_plus a b = plus a' b' == result

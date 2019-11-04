@@ -8,7 +8,7 @@
 A.1
 
 > instance Eq ZZ where
->     (==) a b = a - b == Null
+>     (==) = gleich
 > 
 > instance Ord ZZ where
 >     compare = compareZZ
@@ -16,12 +16,12 @@ A.1
 > instance Enum ZZ where
 >     toEnum = von_Zett_nach_ZZ . toInteger
 >     fromEnum = fromEnum . von_ZZ_nach_Zett
->     succ = inc
->     pred = dec
+> --    succ = inc
+> --    pred = dec
 > 
 > instance Num ZZ where
 >     (+) = plus
->     (-) = minus
+> --    (-) = minus
 >     (*) = mal
 >     negate = neg
 >     abs = absZZ
@@ -48,7 +48,9 @@ A.2
 > showZZ z = showPositiveZZ z
 >
 > showPositiveZZ :: ZZ -> String
-> showPositiveZZ = myFix (\rec z -> if z <= 0 then "" else rec (z `durch` 16) ++ [digit z])
+> showPositiveZZ z
+>   | z <= 0 = ""
+>   | otherwise = showPositiveZZ (z `durch` 16) ++ [digit z]
 >   where
 >     digit = (cycle "0123456789ABCDEF" !!) . fromEnum
 >     myFix f = let x = f x in x
