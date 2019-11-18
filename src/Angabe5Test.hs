@@ -11,6 +11,7 @@ test_all = do
     test tc_bsp1
     test tc_bsp2
     test tc_bsp3
+    test tc_a2
 
 tageAnzahl :: Wochentag -> [Nat0] -> [Tag]
 tageAnzahl first = zipWith Tag $ drop (fromEnum first) (cycle woche)
@@ -102,3 +103,30 @@ tc_bsp3 =
     , wird_gestreikt bsp3 4 ->> False
     , wird_gestreikt bsp3 6 ->> True
     ]
+
+
+avb = const 3 :: Arith_Variablenbelegung
+lvb = const True :: Log_Variablenbelegung
+vb1 = (avb,lvb) :: Variablenbelegung
+vb2 = (\ av -> if av == A1 then 42 else avb av,
+       \ lv -> if lv /= L6 then False else (mod (avb A3) 3 == 0)
+       ) :: Variablenbelegung
+
+aa1 = Mal (Plus (AV A1) (AV A2)) (Mal (AV A1) (AV A2))
+aa2 = AK 42
+la1 = Nicht (Kleiner aa1 aa1)
+la2 = Oder (Nicht (Gleich aa1 aa1)) (Oder (Nicht (LV L3)) (Nicht la1))
+
+
+tc_a2 =
+    [ links (evaluiere aa1 vb1) ->> links (Left 54)
+    , links (evaluiere aa1 vb2) ->> links (Left 5670)
+    , links (evaluiere aa2 vb1) ->> links (Left 42)
+    , links (evaluiere aa2 vb2) ->> links (Left 42)
+    , rechts (evaluiere la1 vb1) ->> rechts (Right True)
+    , rechts (evaluiere la1 vb2) ->> rechts (Right True)
+    , rechts (evaluiere la2 vb1) ->> rechts (Right False)
+    , rechts (evaluiere la2 vb2) ->> rechts (Right True)
+    , links (evaluiere (Minus aa2 (AK 3)) vb1) ->> 39
+    ]
+
