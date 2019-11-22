@@ -120,6 +120,7 @@ data Execution
     , after :: [Anweisung]
     , index :: Int
     , state :: Zustand
+    }
     | Terminated
 
 running :: Execution -> Bool
@@ -151,8 +152,8 @@ getState (Execution _ _ _ _ state) = state
 
 step :: Execution -> Execution
 step e = case instruction e of
-  AZ arithVar arithExpr = e {
-    .state = state e
+  AZ arithVar arithExpr -> e {
+    state = state e
   }
 --AZ Arith_Variable Arith_Ausdruck
 --LZ Log_Variable Log_Ausdruck -- Wertzuweisung an logische Variable
