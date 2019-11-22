@@ -107,62 +107,107 @@ interpretiere_1 :: EPS -> Anfangszustand -> Endzustand
 interpretiere_1 e = last . interpretiere_2 e
 
 interpretiere_2 :: EPS -> Anfangszustand -> [Zwischenzustand]
-interpretiere_2 eps state = map getState $ takeWhile running (iterate step (newExecution eps state))
+interpretiere_2 eps s = map state $ run (newExecution eps s)
 
 --
 --
 --
 
-data Execution 
-    = Execution 
-    { before :: [Anweisung] 
-    , instruction :: Anweisung
-    , after :: [Anweisung]
-    , index :: Int
-    , state :: Zustand
-    }
+data ProgramCounter
+    = PC [Anweisung] !Anweisung [Anweisung] !Adresse !Int
     | Terminated
 
-running :: Execution -> Bool
-running Terminated = False
-running _ = True
+newPC :: [Anweisung] -> ProgramCounter
+newPC [] = Terminated
+newPC instructions@(x:xs) = PC [] x xs 0 (length instructions)
 
-newExecution :: [Anweisung] -> Anfangszustand -> Execution
-newExecution [] _ = Terminated
-newExecution (x:xs) state = Execution [] x xs 0 state
-
-incPC :: Execution -> Execution
+incPC :: ProgramCounter -> ProgramCounter
 incPC Terminated = Terminated
-incPC (Execution _ _ [] _ _) = Terminated
-incPC (Execution l current (x:xs) n state) = Execution (current:l) x xs (n + 1) state
+incPC (PC _ _ [] _ _) = Terminated
+incPC (PC left current (x:xs) n count) = PC (current:left) x xs (n + 1) count
 
-decPC :: Execution -> Execution
+decPC :: ProgramCounter -> ProgramCounter
 decPC Terminated = Terminated
-decPC (Execution [] _ _ _ _) = Terminated
-decPC (Execution (x:xs) current r n state) = Execution xs x (current:r) (n - 1) state
+decPC (PC [] _ _ _ _) = Terminated
+decPC (PC (x:xs) current right index count) = PC xs x (current:right) (index - 1) count
 
-setPC :: Int -> Execution -> Execution
-setPC n pc@(Execution _ _ _ index _)
+goto :: Int -> ProgramCounter -> ProgramCounter
+goto n pc@(PC _ _ _ index count)
+  | n >= count = Terminated
+  | n < 0 = Terminated
   | n > index = incPC pc
   | n < index = decPC pc
-setPC _ pc = pc
+goto _ pc = pc
 
-getState :: Execution -> Zustand
-getState (Execution _ _ _ _ state) = state
+gotoOrAppend :: Int -> ProgramCounter -> ProgramCounter
+gotoOrAppend n pc@(PC left current right index count)
+  | n /= count = goto n pc
+  | index /= lastIndex = gotoOrAppend n $ goto lastIndex pc
+  | index == lastIndex = PC (current:left) (US 42) [] n n
+  where
+    lastIndex :: Adresse
+    lastIndex = count - 1
+
+instruction :: ProgramCounter -> Maybe Anweisung
+instruction Terminated = Nothing
+instruction (PC _ current _ _ _) = Just current
+
+setInstruction :: Anweisung -> ProgramCounter -> ProgramCounter
+setInstruction _ Terminated = Terminated
+setInstruction instr (PC left _ right index count) = PC left instr right index count
+
+--
+--
+--
+
+data Execution = Execution 
+  { pc :: ProgramCounter
+  , state :: Zustand
+  }
+
+running :: Execution -> Bool
+running e = case pc e of 
+  Terminated -> False
+  _ -> True
+
+newExecution :: [Anweisung] -> Anfangszustand -> Execution
+newExecution = Execution . newPC
+
+modifyState :: (Zustand -> Zustand) -> Execution -> Execution
+modifyState f e = e { state = f (state e) }
+
+modifyPC :: (ProgramCounter -> ProgramCounter) -> Execution -> Execution
+modifyPC f e = e { pc = f (pc e) }
+
+run :: Execution -> [Execution]
+run = takeWhile running . iterate step
+
+--
+--
+--
 
 step :: Execution -> Execution
-step e = case instruction e of
-  AZ arithVar arithExpr -> e {
-    state = state e
-  }
---AZ Arith_Variable Arith_Ausdruck
---LZ Log_Variable Log_Ausdruck -- Wertzuweisung an logische Variable
---FU Log_Ausdruck Sprungadresse Sprungadresse -- Fallunterscheidung
---BS Log_Ausdruck Sprungadresse -- Bedingter Sprung
---US Sprungadresse -- Unbedingter Sprung
---MP Adresse Anweisung -- Selbstmodifikation des Programms
+step e = case instruction (pc e) of
+  Nothing -> e
+  Just instr -> case instr of
+    AZ arithVar arithExpr -> modifyPC incPC $ modifyState (setArithVariable arithVar arithExpr) e
+    LZ logVar logExpr -> modifyPC incPC $ modifyState (setLogVariable logVar logExpr) e
+    FU logExpr addrL addrR -> if evaluiereLogAusdruck logExpr (state e) then modifyPC (goto addrL) e else modifyPC (goto addrR) e
+    BS logExpr addr -> if evaluiereLogAusdruck logExpr (state e) then modifyPC (goto addr) e else modifyPC incPC e
+    US addr -> modifyPC (goto addr) e
+    MP addr instr -> modifyPC (setInstruction instr . gotoOrAppend addr) e
 
---Arith_Variablenbelegung = Arith_Variable -> Int -- Total definierte Abb.
---Log_Variablenbelegung = Log_Variable -> Bool -- Total definierte Abb.
---Variablenbelegung = (Arith_Variablenbelegung,Log_Variablenbelegung)
---
+
+setArithVariable :: Arith_Variable -> Arith_Ausdruck -> Variablenbelegung -> Variablenbelegung
+setArithVariable var value s@(arithVars, logVars) = (arithVars', logVars)
+  where
+    arithVars' :: Arith_Variable -> Int
+    arithVars' v = if v == var then evaluiereArithAusdruck value s else arithVars v
+
+setLogVariable :: Log_Variable -> Log_Ausdruck -> Variablenbelegung -> Variablenbelegung
+setLogVariable var value s@(arithVars, logVars) = (arithVars, logVars')
+  where
+    logVars' :: Log_Variable -> Bool
+    logVars' v = if v == var then evaluiereLogAusdruck value s else logVars v
+
+
