@@ -1,10 +1,8 @@
 module Angabe7 where
 
 import           Control.Monad
-import           Data.Ord                       ( Down(..)
-                                                , comparing
-                                                )
-import           Data.List                      ( sortOn
+import           Data.Ord                       ( comparing )
+import           Data.List                      ( sort
                                                 , maximumBy
                                                 )
 
@@ -112,7 +110,7 @@ newDp []          = []
 newDp woerterbuch = dp
   where
     dp :: [Dp]
-    dp = zipWith f [0 ..] $ sortOn Down woerterbuch
+    dp = zipWith f [0 ..] $ reverse $ sort woerterbuch -- can't use sortOn Down because of hugs
     f :: Int -> Wort -> Dp
     f 0 w = Dp w 1
     f n w = Dp w $ maximum $ map val $ take n dp
@@ -132,4 +130,3 @@ reconstruct dp = reverse $ map wort $ foldr f [best] dp
         value d == value x - 1 && ist_aufsteigende_leiterstufe (wort x) (wort d)
     best :: Dp
     best = maximumBy (comparing value) dp
-
