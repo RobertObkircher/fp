@@ -51,18 +51,17 @@ selektiere epsilon s = snd $ head $ dropWhile f $ zip s (tail s)
 type Woerterstrom = [String]
 
 generiere_woerter :: Woerterstrom
---generiere_woerter = "" : concatMap (\x -> [x ++ "a", x++"b", x++"c"]) generiere_woerter
---generiere_woerter = "" : concatMap (\x -> map ((x++) . (:[])) "abc") generiere_woerter
 --generiere_woerter = "" : [ w ++ [a] | w <- generiere_woerter, a <- "abc" ]
---generiere_woerter = concatMap (\n -> replicateM n "abc") [1..]
-generiere_woerter = concatMap (`replicateM` "abc") [0 ..]
-
 {-
 generiere_woerter = "" : do
   w <- generiere_woerter
   a <- "abc"
   pure (w ++ [a])
 -}
+--generiere_woerter = "" : concatMap (\x -> [x ++ "a", x++"b", x++"c"]) generiere_woerter
+--generiere_woerter = concatMap (\n -> replicateM n "abc") [1..]
+generiere_woerter = concatMap (`replicateM` "abc") [0 ..]
+
 filtere_palindrome :: Woerterstrom -> Woerterstrom
 filtere_palindrome = filter (\x -> x == reverse x)
 
@@ -97,9 +96,14 @@ wortleiter (x : xs) (y : ys) | x == y = wortleiter xs ys
                              | x /= y = xs == ys
 wortleiter _ _ = False
 
+-- from the definition of ist_aufsteigende_leiterstufe follows,
+-- that ist_aufsteigende_wortleiter can only be true if the
+-- input is sorted. This means we can use dynamic programming
+-- where lexographically largest string has a value of 1
+-- and the value of smaller strings is the longest aufsteigende_wortleiter
+-- that only considers the words that are larger or equal.
 data Dp = Dp
-  { index :: Int
-  , wort :: Wort
+  { wort :: Wort
   , value :: Int
   } deriving (Show)
 
@@ -110,27 +114,22 @@ newDp woerterbuch = dp
     dp :: [Dp]
     dp = zipWith f [0 ..] $ sortOn Down woerterbuch
     f :: Int -> Wort -> Dp
-    f 0 w = Dp 0 w 1
-    f n w = Dp n w $ maximum $ map val $ take n dp
+    f 0 w = Dp w 1
+    f n w = Dp w $ maximum $ map val $ take n dp
       where
         val greater = if ist_aufsteigende_leiterstufe w (wort greater)
             then value greater + 1
             else 1
 
-
 reconstruct :: [Dp] -> Wortleiter
-reconstruct = reverse . map wort . foldl f [] . dropUntilBest . reverse
+reconstruct [] = []
+reconstruct dp = reverse $ map wort $ foldr f [best] dp
   where
-    f :: [Dp] -> Dp -> [Dp]
-    f []       d = [d]
-    f (x : xs) d = if match x d then d : x : xs else x : xs
+    f :: Dp -> [Dp] -> [Dp]
+    f d []       = [d]
+    f d (x : xs) = if match x d then d : x : xs else x : xs
     match x d =
         value d == value x - 1 && ist_aufsteigende_leiterstufe (wort x) (wort d)
-
-dropUntilBest :: [Dp] -> [Dp]
-dropUntilBest dp = dropWhile notBest dp
-  where
     best :: Dp
     best = maximumBy (comparing value) dp
-    notBest :: Dp -> Bool
-    notBest d = value d /= value best
+
