@@ -25,8 +25,8 @@ testA1 = "testA1" ~: test
     [ take 9 generiere_fak_strom @?= [1, 1, 2, 6, 24, 120, 720, 5040, 40320]
     , take 5 generiere_fak_strom @?= [1, 1, 2, 6, 24]
     , take 4 (filter (> 100) generiere_fak_strom) @?= [120, 720, 5040, 40320]
-    , take 7 (filter (< 10000) generiere_fak_strom)
-        @?= [1, 1, 2, 6, 24, 720, 5040]
+    , take 8 (filter (< 10000) generiere_fak_strom)
+        @?= [1, 1, 2, 6, 24, 120, 720, 5040]
     ]
 
 testA2 :: Test
@@ -34,13 +34,13 @@ testA2 = "testA2" ~: test
     [ take 3 (generiere_exp_strom 1.0) @?= [1.0, 2.0, 2.5]
     , exp_approx 1.0 0.5 @?= 2.5
     , selektiere 0.5 (generiere_exp_strom 1.0) @?= 2.5
-    , exp_approx 1.0 0.2 @?= 2 * 2 / 3
-    , selektiere 0.2 (generiere_exp_strom 1.0) @?= 2 * 2 / 3
+    , exp_approx 1.0 0.2 @?= 8 / 3
+    , selektiere 0.2 (generiere_exp_strom 1.0) @?= 8 / 3
     ]
 
 testA3 :: Test
 testA3 = "testA3" ~: test
-    [ take 20 generiere_woerter
+    [ take 21 generiere_woerter
         @?= [ ""
             , "a"
             , "b"
@@ -65,7 +65,7 @@ testA3 = "testA3" ~: test
             ]
     , take 10 (filtere_palindrome generiere_woerter)
         @?= ["", "a", "b", "c", "aa", "bb", "cc", "aaa", "aba", "aca"]
-    , [ s | s <- filtere_palindrome generiere_woerter, length s == 2 ]
+    , take 3 [ s | s <- filtere_palindrome generiere_woerter, length s == 2 ]
         @?= ["aa", "bb", "cc"]
     ]
 
