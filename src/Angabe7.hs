@@ -10,6 +10,7 @@ import           Data.List                      ( sort
 -- A1
 --
 
+-- the next factorial can be computed by multiplying its index with the last factorial
 generiere_fak_strom :: [Integer]
 generiere_fak_strom = 1 : zipWith (*) generiere_fak_strom [1 ..]
 
@@ -27,14 +28,9 @@ type Strom = [Double]
 approximiere_exp :: Stelle -> Genauigkeit -> Approx_Wert
 approximiere_exp x epsilon = selektiere epsilon (generiere_exp_strom x)
 
-exp_approx :: Stelle -> Genauigkeit -> Approx_Wert
-exp_approx = approximiere_exp
-
 generiere_exp_strom :: Stelle -> Strom
-generiere_exp_strom x = tail $ scanl (+) 0 $ zipWith
-    (/)
-    (iterate (* x) 1)
-    (map fromInteger generiere_fak_strom)
+generiere_exp_strom x = scanl1 (+)
+    $ zipWith (/) (iterate (* x) 1) (map fromInteger generiere_fak_strom)
 
 selektiere :: Genauigkeit -> Strom -> Approx_Wert
 selektiere epsilon s = snd $ head $ dropWhile f $ zip s (tail s)
@@ -94,12 +90,11 @@ wortleiter (x : xs) (y : ys) | x == y = wortleiter xs ys
                              | x /= y = xs == ys
 wortleiter _ _ = False
 
--- from the definition of ist_aufsteigende_leiterstufe follows,
--- that ist_aufsteigende_wortleiter can only be true if the
--- input is sorted. This means we can use dynamic programming
--- where lexographically largest string has a value of 1
--- and the value of smaller strings is the longest aufsteigende_wortleiter
--- that only considers the words that are larger or equal.
+-- From the definition of ist_aufsteigende_leiterstufe follows,
+-- that ist_aufsteigende_wortleiter can only be True if the
+-- input is sorted. This means that we can use dynamic programming
+-- where the value is the longest aufsteigende_wortleiter only
+-- consists of the words that are lexographically larger.
 data Dp = Dp
   { wort :: Wort
   , value :: Int

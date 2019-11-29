@@ -32,9 +32,9 @@ testA1 = "testA1" ~: test
 testA2 :: Test
 testA2 = "testA2" ~: test
     [ take 3 (generiere_exp_strom 1.0) @?= [1.0, 2.0, 2.5]
-    , exp_approx 1.0 0.5 @?= 2.5
+    , approximiere_exp 1.0 0.5 @?= 2.5
     , selektiere 0.5 (generiere_exp_strom 1.0) @?= 2.5
-    , exp_approx 1.0 0.2 @?= 8 / 3
+    , approximiere_exp 1.0 0.2 @?= 8 / 3
     , selektiere 0.2 (generiere_exp_strom 1.0) @?= 8 / 3
     ]
 
