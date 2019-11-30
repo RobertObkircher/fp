@@ -69,8 +69,9 @@ type Wortleiter = [Wort]
 
 ist_aufsteigende_leiterstufe :: Wort -> Wort -> Bool
 ist_aufsteigende_leiterstufe a@(_ : withoutFirst) b =
-    b > a && (withoutFirst == b || wortleiter a b)
-ist_aufsteigende_leiterstufe a b = b > a && wortleiter a b
+    b > a && (withoutFirst == b || leiterstufe a b)
+ist_aufsteigende_leiterstufe a b = b > a && leiterstufe a b
+  where
 
 ist_aufsteigende_wortleiter :: [Wort] -> Bool
 ist_aufsteigende_wortleiter (x : y : ys) =
@@ -83,18 +84,18 @@ gib_max_aufsteigende_wortleiter = reconstruct . newDp
 --
 --
 
-wortleiter :: Wort -> Wort -> Bool
-wortleiter [] []  = True
-wortleiter [] [_] = True
-wortleiter (x : xs) (y : ys) | x == y = wortleiter xs ys
-                             | x /= y = xs == ys
-wortleiter _ _ = False
+leiterstufe :: Wort -> Wort -> Bool
+leiterstufe [] []  = True
+leiterstufe [] [_] = True
+leiterstufe (x : xs) (y : ys) | x == y = leiterstufe xs ys
+                              | x /= y = xs == ys
+leiterstufe _ _ = False
 
 -- From the definition of ist_aufsteigende_leiterstufe follows,
 -- that ist_aufsteigende_wortleiter can only be True if the
--- input is sorted. This means that we can use dynamic programming
--- where the value is the longest aufsteigende_wortleiter only
--- consists of the words that are lexographically larger.
+-- words are sorted. This means that we can use dynamic programming
+-- where the value is the longest aufsteigende_wortleiter that 
+-- only consists of the words that are lexographically larger.
 data Dp = Dp
   { wort :: Wort
   , value :: Int
@@ -105,11 +106,12 @@ newDp []          = []
 newDp woerterbuch = dp
   where
     dp :: [Dp]
-    dp = zipWith f [0 ..] $ reverse $ sort woerterbuch -- can't use sortOn Down because of hugs
+    dp = zipWith f [0 ..] $ reverse $ sort woerterbuch -- can't use sortOn Down because of hugs...
     f :: Int -> Wort -> Dp
     f 0 w = Dp w 1
     f n w = Dp w $ maximum $ map val $ take n dp
       where
+        val :: Dp -> Int
         val greater = if ist_aufsteigende_leiterstufe w (wort greater)
             then value greater + 1
             else 1
@@ -121,6 +123,7 @@ reconstruct dp = reverse $ map wort $ foldr f [best] dp
     f :: Dp -> [Dp] -> [Dp]
     f d []       = [d]
     f d (x : xs) = if match x d then d : x : xs else x : xs
+    match :: Dp -> Dp -> Bool
     match x d =
         value d == value x - 1 && ist_aufsteigende_leiterstufe (wort x) (wort d)
     best :: Dp
