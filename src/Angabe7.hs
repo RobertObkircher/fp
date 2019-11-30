@@ -68,10 +68,16 @@ type Woerterbuch = [Wort] -- nur Werte endliche Laenge; keine Stroeme.
 type Wortleiter = [Wort]
 
 ist_aufsteigende_leiterstufe :: Wort -> Wort -> Bool
-ist_aufsteigende_leiterstufe a@(_ : withoutFirst) b =
-    b > a && (withoutFirst == b || leiterstufe a b)
-ist_aufsteigende_leiterstufe a b = b > a && leiterstufe a b
+ist_aufsteigende_leiterstufe a b = case a of
+    (_ : as) -> b > a && (as == b || go a b)
+    _        -> b > a && go a b
   where
+    go :: Wort -> Wort -> Bool
+    go [] []  = True
+    go [] [_] = True
+    go (x : xs) (y : ys) | x == y = go xs ys
+                         | x /= y = xs == ys
+    go _ _ = False
 
 ist_aufsteigende_wortleiter :: [Wort] -> Bool
 ist_aufsteigende_wortleiter (x : y : ys) =
@@ -81,50 +87,44 @@ ist_aufsteigende_wortleiter _ = True
 gib_max_aufsteigende_wortleiter :: Woerterbuch -> Wortleiter
 gib_max_aufsteigende_wortleiter = reconstruct . newDp
 
---
---
-
-leiterstufe :: Wort -> Wort -> Bool
-leiterstufe [] []  = True
-leiterstufe [] [_] = True
-leiterstufe (x : xs) (y : ys) | x == y = leiterstufe xs ys
-                              | x /= y = xs == ys
-leiterstufe _ _ = False
-
 -- From the definition of ist_aufsteigende_leiterstufe follows,
 -- that ist_aufsteigende_wortleiter can only be True if the
--- words are sorted. This means that we can use dynamic programming
--- where the value is the longest aufsteigende_wortleiter that 
--- only consists of the words that are lexographically larger.
+-- original words are sorted. This means that we can use dynamic
+-- programming where the value is the longest aufsteigende_wortleiter
+-- that only consists of the words that are lexographically larger.
+--
+-- Descending order
+-- f(0) = 1, since there are no larger elements
+-- f(n) = 1 + max({0} U { f(x) | x < n and aufsteigende_wortleiter(x,n) })
+--
 data Dp = Dp
   { wort :: Wort
   , value :: Int
   } deriving (Show)
+
 
 newDp :: Woerterbuch -> [Dp]
 newDp []          = []
 newDp woerterbuch = dp
   where
     dp :: [Dp]
-    dp = zipWith f [0 ..] $ reverse $ sort woerterbuch -- can't use sortOn Down because of hugs...
+    dp = zipWith f [0 ..] $ reverse $ sort woerterbuch -- sorry hlint, we can't use sortOn Down because of hugs...
     f :: Int -> Wort -> Dp
-    f 0 w = Dp w 1
-    f n w = Dp w $ maximum $ map val $ take n dp
+    f n w = Dp w $ 1 + maximum (0 : map value (filter matching $ take n dp))
       where
-        val :: Dp -> Int
-        val greater = if ist_aufsteigende_leiterstufe w (wort greater)
-            then value greater + 1
-            else 1
+        matching :: Dp -> Bool
+        matching = ist_aufsteigende_leiterstufe w . wort
+
 
 reconstruct :: [Dp] -> Wortleiter
 reconstruct [] = []
 reconstruct dp = reverse $ map wort $ foldr f [best] dp
   where
     f :: Dp -> [Dp] -> [Dp]
-    f d []       = [d]
-    f d (x : xs) = if match x d then d : x : xs else x : xs
+    f d xs@(x : _) = if match x d then d : xs else xs
     match :: Dp -> Dp -> Bool
-    match x d =
-        value d == value x - 1 && ist_aufsteigende_leiterstufe (wort x) (wort d)
+    match s b =
+        value b == value s - 1 && ist_aufsteigende_leiterstufe (wort s) (wort b)
     best :: Dp
     best = maximumBy (comparing value) dp
+
