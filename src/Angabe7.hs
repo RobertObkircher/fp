@@ -86,6 +86,8 @@ ist_aufsteigende_wortleiter _ = True
 
 gib_max_aufsteigende_wortleiter :: Woerterbuch -> Wortleiter
 gib_max_aufsteigende_wortleiter = reconstruct . newDp
+-- O(2^n)
+--gib_max_aufsteigende_wortleiter = maximumBy (comparing length) . filter ist_aufsteigende_wortleiter . filterM (const [True, False]) . sort
 
 -- From the definition of ist_aufsteigende_leiterstufe follows,
 -- that ist_aufsteigende_wortleiter can only be True if the
@@ -127,4 +129,3 @@ reconstruct dp = reverse $ map wort $ foldr f [best] dp
         value b == value s - 1 && ist_aufsteigende_leiterstufe (wort s) (wort b)
     best :: Dp
     best = maximumBy (comparing value) dp
-
